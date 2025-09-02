@@ -1,0 +1,3 @@
+[submodule "services/goalcraft"]
+	path = services/goalcraft
+	url = https://github.com/loisperrigon/GOALCRAFTAI.git
