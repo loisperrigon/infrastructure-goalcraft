@@ -20,7 +20,8 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(gh repo create:*)",
-      "Bash(git clone:*)"
+      "Bash(git clone:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }

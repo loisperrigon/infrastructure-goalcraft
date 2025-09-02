@@ -1,111 +1,179 @@
-# 🚀 Infrastructure Template
+# 🚀 Infrastructure GoalCraftAI + n8n
 
 <p align="center">
-  <strong>Template d'infrastructure professionnelle prêt à déployer</strong><br>
-  Nginx • Docker • Architecture Modulaire • SSL Auto • Multi-Services
+  <strong>Infrastructure complète pour GoalCraftAI avec n8n et MongoDB</strong><br>
+  Next.js App Router • WebSocket Intégré • n8n Workflows • MongoDB • SSL Auto
 </p>
 
 <p align="center">
   <a href="#-démarrage-rapide">Démarrage Rapide</a> •
-  <a href="#-architecture-template">Architecture</a> •
-  <a href="#-documentation">Documentation</a> •
-  <a href="#-contribution">Contribution</a>
+  <a href="#-architecture">Architecture</a> •
+  <a href="#-services">Services</a> •
+  <a href="#-déploiement">Déploiement</a>
 </p>
 
 ---
 
-> 🎯 **Objectif** : Fournir une infrastructure de base solide et modulaire pour déployer rapidement des projets clients avec les meilleures pratiques DevOps.
+> 🎯 **Objectif** : Infrastructure complète pour déployer GoalCraftAI avec workflow automation n8n, WebSocket intégré et MongoDB.
 
-## 🚀 Template Features
+## ✨ Services Configurés
 
-✅ **Services inclus dans le template**
+✅ **Stack technique complète**
 
-- 🌐 **N8N Workflows** : Plateforme d'automatisation complète
-- 🔧 **Nginx Reverse Proxy** : SSL termination et sécurité
-- 🐳 **Docker Compose** : Orchestration modulaire des services
-- 📦 **Support Submodules** : Intégration facile des projets clients
+- 🎮 **GoalCraftAI** : Application Next.js 15 avec gamification d'objectifs
+- 🤖 **n8n Workflows** : Automatisation et génération IA
+- 💬 **WebSocket Intégré** : Temps réel sur port 3002 (lancé avec Next.js)
+- 🗄️ **MongoDB** : Base de données pour persistance
+- 🔒 **Nginx + SSL** : Reverse proxy avec certificats auto
 
-## 🏗️ Architecture Template
+## 🏗️ Architecture
+
+### Diagramme des services
 
 ```
-infrastructure-template/
-├── services/                          # Services clients (à ajouter via submodules)
-│   └── [vos-projets-ici]/            # Ajoutez vos submodules clients
-├── nginx/                             # Configuration nginx
-│   ├── sites-available/              # Vos configurations (vide)
-│   ├── ssl/                          # Configuration SSL
-│   └── conf.d/                       # Configuration générale
-├── scripts/                          # Scripts utilitaires
-│   ├── deploy-nginx.sh              # Déploiement nginx
-│   ├── backup-docker-volumes.sh     # Backup volumes
-│   └── restore-docker-volume.sh     # Restore volumes
-├── examples/                         # Exemples de configuration
-│   ├── docker-compose.examples.yml  # Services Docker exemples
-│   └── nginx-templates/             # Templates nginx
-├── docker-compose.yml               # Template d'orchestration
-├── .env.example                     # Variables d'environnement
-├── CLAUDE.md                        # Guide développeur
-└── README.md                        # Ce fichier
+┌─────────────────────────────────────────────────────────────┐
+│                         NGINX (SSL)                          │
+│  ┌──────────────────┐  ┌─────────────────────┐             │
+│  │ questpulse.store │  │ n8n.questpulse.store│             │
+│  │    (avec /ws)    │  └──────────┬──────────┘             │
+│  └────────┬─────────┘             │                         │
+└───────────┼───────────────────────┼─────────────────────────┘
+            │                       │
+    ┌───────▼────────┐      ┌──────▼──────┐
+    │  GoalCraft App │      │     n8n     │
+    │   Port 3000    │      │  Port 5678  │
+    │       +        │      └──────┬──────┘
+    │   WebSocket    │             │
+    │   Port 3002    │             │
+    └───────┬────────┘             │
+            │                      │
+    ┌───────▼──────────────────────▼──────┐
+    │       MongoDB (Port 27017)          │
+    └──────────────────────────────────────┘
 ```
 
-## 🚀 Démarrage Rapide Client
+### Structure des fichiers
 
-### 1. Copier le template
+```
+infrastructure-goalcraft/
+├── services/
+│   └── goalcraft/              # Code source GoalCraftAI (submodule ou clone)
+│       ├── frontend/
+│       │   ├── Dockerfile      # Build Next.js + WebSocket intégré
+│       │   ├── websocket-server.js # Serveur WebSocket
+│       │   └── ...             # Code Next.js App Router
+│       └── docker-compose.yml  # Config Docker originale
+├── nginx/
+│   └── sites-available/
+│       ├── n8n.conf           # Config nginx pour n8n.questpulse.store
+│       └── goalcraft.conf     # Config nginx pour questpulse.store (avec /ws)
+├── scripts/
+│   ├── deploy-nginx.sh        # Déploiement nginx avec backup
+│   └── backup-docker-volumes.sh # Backup des volumes
+├── docker-compose.yml         # Orchestration principale
+├── .env.example              # Template variables d'environnement
+└── README.md                 # Ce fichier
+```
+
+## 🚀 Démarrage Rapide
+
+### 1. Cloner le repository
 
 ```bash
-# Copier le template pour votre client
-cp -r infrastructure-template/ client-infrastructure/
-cd client-infrastructure/
+# Cloner le repo privé
+git clone https://github.com/loisperrigon/infrastructure-goalcraft.git
+cd infrastructure-goalcraft
+
+# Le code GoalCraftAI est déjà inclus dans services/goalcraft/
 ```
 
-### 2. Configuration initiale
+### 2. Configuration de l'environnement
 
 ```bash
 # Copier et configurer les variables
 cp .env.example .env
-nano .env  # Modifier avec domaine client, mots de passe, etc.
+nano .env
 ```
 
-Variables principales à configurer :
-- `N8N_HOST` : Domaine N8N du client
-- `CLIENT_DOMAIN` : Domaine principal du client
-- `N8N_PASSWORD` : Mot de passe fort pour N8N
-- `SSL_EMAIL` : Email pour Let's Encrypt
-- `GITHUB_ORG` : Organisation GitHub (si backup N8N)
+**Variables importantes à configurer :**
 
-### 3. Ajouter les services clients
+```env
+# n8n - Workflow automation
+N8N_HOST=n8n.questpulse.store
+N8N_PASSWORD=votre-mot-de-passe-fort
+
+# MongoDB pour GoalCraft
+MONGO_PASSWORD=mot-de-passe-mongodb
+
+# NextAuth (authentification GoalCraft)
+NEXTAUTH_URL=https://questpulse.store
+NEXTAUTH_SECRET=chaine-aleatoire-32-caracteres-minimum
+ENCRYPTION_KEY=cle-encryption-32-caracteres
+
+# URLs publiques
+NEXT_PUBLIC_APP_URL=https://questpulse.store
+NEXT_PUBLIC_WEBSOCKET_URL=wss://questpulse.store/ws
+
+# Google OAuth (optionnel)
+GOOGLE_CLIENT_ID=votre-client-id
+GOOGLE_CLIENT_SECRET=votre-client-secret
+```
+
+### 3. Lancer les services
 
 ```bash
-# Ajouter vos projets comme submodules
-git submodule add https://github.com/client/backend-api.git services/client-backend
-git submodule add https://github.com/client/frontend-app.git services/client-frontend
-git submodule update --init --recursive
+# Construire et démarrer tous les services
+docker compose up -d --build
+
+# Vérifier que tout fonctionne
+docker compose ps
+
+# Voir les logs en temps réel
+docker compose logs -f
 ```
 
-### 4. Configurer nginx
+### 4. Configurer Nginx (sur le serveur hôte)
 
 ```bash
-# Copier les templates depuis examples
-cp examples/nginx-templates/backend-api.conf.template nginx/sites-available/client-api.conf
-# Éditer et remplacer SERVICE_NAME, CLIENT_DOMAIN, BACKEND_PORT
+# Déployer les configurations nginx
+sudo ./scripts/deploy-nginx.sh
+
+# Vérifier la configuration
+sudo nginx -t
+
+# Recharger nginx
+sudo systemctl reload nginx
 ```
 
-### 5. Adapter docker-compose.yml
+### 5. Accéder aux services
 
-```bash
-# Copier les services nécessaires depuis examples
-# Voir examples/docker-compose.examples.yml
-```
+- **GoalCraftAI** : https://questpulse.store
+- **n8n** : https://n8n.questpulse.store (user: admin, password: dans .env)
+- **WebSocket** : wss://questpulse.store/ws (intégré)
 
-### 6. Déployer
+## 📦 Services Détaillés
 
-```bash
-# Déployer la configuration nginx
-./scripts/deploy-nginx.sh
+### GoalCraftAI (questpulse.store)
 
-# Démarrer les services
-docker compose up -d
-```
+- **Framework** : Next.js 15 avec App Router
+- **Features** : Gamification d'objectifs, chat IA, skill tree interactif
+- **Ports** : 3000 (Next.js) + 3002 (WebSocket)
+- **WebSocket** : Lancé automatiquement avec `concurrently` dans le même container
+- **Route WebSocket** : `/ws` proxifié par nginx vers port 3002
+
+### n8n (n8n.questpulse.store)
+
+- **Rôle** : Workflow automation pour génération IA
+- **Port** : 5678
+- **Auth** : Basic Auth (admin / password dans .env)
+- **Webhooks** : Intégration avec GoalCraft pour génération d'objectifs
+
+### MongoDB
+
+- **Port** : 27017
+- **Database** : goalcraft
+- **Auth** : admin / password dans .env
+- **Volume** : goalcraft_mongodb_data (persistant)
 
 ## 🔧 Gestion des Services
 
@@ -127,45 +195,31 @@ docker compose logs -f n8n
 docker compose logs -f client-backend
 ```
 
-### Mise à jour des submodules
+### Mise à jour de GoalCraftAI
 
 ```bash
-# Mettre à jour tous les submodules
-git submodule update --remote --merge
-
-# Mettre à jour un submodule spécifique
-cd services/client-backend
+# Si GoalCraft est cloné directement
+cd services/goalcraft
 git pull origin main
 cd ../..
-git add services/client-backend
-git commit -m "Update client backend"
+
+# Reconstruire après mise à jour
+docker compose up -d --build goalcraft-app
 ```
 
-### Déploiement Frontend (optionnel)
+### Configuration WebSocket
 
-```bash
-# Mode AUTO - déploie TOUS les frontends trouvés (pour les flemmards 😄)
-./scripts/update-frontend.sh --auto
-# → Cherche dans services/*/frontend/ et services/*/backend/frontend/
-# → Détecte automatiquement React/Vue (dist/, build/) vs HTML statique
-# → Déploie tout automatiquement
+Le WebSocket est **intégré dans le container GoalCraft** et lancé automatiquement :
 
-# Mode MANUEL - déploie un frontend spécifique
-./scripts/update-frontend.sh /chemin/source nom-site
+1. **Dockerfile modifié** : Lance Next.js ET WebSocket via `concurrently`
+2. **Port 3002** : WebSocket server interne
+3. **Route nginx** : `/ws` proxy vers localhost:3002
+4. **URL cliente** : `wss://questpulse.store/ws`
 
-# Ou via deploy-nginx.sh (plus basique, sans détection)
-./scripts/deploy-nginx.sh frontend /chemin/source nom-site
-
-# Exemples :
-./scripts/update-frontend.sh --auto                      # Déploie TOUT avec détection
-./scripts/update-frontend.sh ./services/landing landing  # Un seul projet
-./scripts/update-frontend.sh ./services/app/frontend app # React/Vue auto-détecté
+```javascript
+// Connexion côté client
+const ws = new WebSocket('wss://questpulse.store/ws');
 ```
-
-**Détection intelligente** :
-- Si `dist/` ou `build/` existe → déploie le contenu compilé (React/Vue)
-- Sinon → déploie les fichiers statiques (HTML/CSS/JS)
-- Si `package.json` sans build → erreur avec instruction de faire `npm run build`
 
 ## 📊 Monitoring
 
@@ -207,19 +261,84 @@ sudo certbot renew
 ./scripts/restore-docker-volume.sh backups/mongo_data_20240126_143022.tar.gz mongo_data
 ```
 
-## 🛠️ Scripts Disponibles
+## 🛠️ Scripts Utiles
+
+### Scripts disponibles
 
 - **deploy-nginx.sh** : Déploiement nginx avec backup automatique
-- **update-frontend.sh** : Mise à jour rapide d'un frontend statique
-- **backup-docker-volumes.sh** : Backup générique de volumes Docker
+- **backup-docker-volumes.sh** : Backup des volumes Docker
 - **restore-docker-volume.sh** : Restauration de volumes Docker
+
+### Commandes Docker utiles
+
+```bash
+# Rebuild complet de GoalCraft
+docker compose up -d --build goalcraft-app
+
+# Voir les logs du WebSocket
+docker compose logs -f goalcraft-app | grep "WS"
+
+# Redémarrer n8n
+docker compose restart n8n
+
+# Stats en temps réel
+docker stats
+```
 
 ## 📚 Documentation
 
 - **[CLAUDE.md](CLAUDE.md)** : Guide complet pour le développement
 - **[.env.example](.env.example)** : Template des variables d'environnement
 
-## 🆘 Dépannage
+## 🆘 Troubleshooting
+
+### WebSocket ne se connecte pas
+
+1. **Vérifier que le WebSocket est lancé** :
+   ```bash
+   docker compose logs goalcraft-app | grep "3002"
+   # Doit afficher : "🚀 Serveur WebSocket démarré sur le port 3002"
+   ```
+
+2. **Tester la route nginx** :
+   ```bash
+   curl -i -N -H "Connection: Upgrade" \
+        -H "Upgrade: websocket" \
+        https://questpulse.store/ws
+   ```
+
+3. **Vérifier les ports dans le container** :
+   ```bash
+   docker exec goalcraft-app netstat -tlnp
+   ```
+
+### n8n ne génère pas les objectifs
+
+1. **Vérifier la connexion** :
+   ```bash
+   curl https://n8n.questpulse.store/healthz
+   ```
+
+2. **Vérifier les webhooks** :
+   - Accéder à n8n : https://n8n.questpulse.store
+   - Vérifier que le workflow est actif
+   - Tester le webhook manuellement
+
+### MongoDB connection error
+
+1. **Vérifier que MongoDB est lancé** :
+   ```bash
+   docker compose ps goalcraft-mongodb
+   ```
+
+2. **Tester la connexion** :
+   ```bash
+   docker exec -it goalcraft-mongodb mongosh \
+     --username admin \
+     --password $MONGO_PASSWORD
+   ```
+
+## 🆘 Dépannage (Legacy)
 
 ### Problèmes Docker
 
@@ -241,38 +360,72 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-## 🚀 Architecture Client
+## 🚀 Déploiement Production
 
-Ce template est conçu pour être **réutilisable** pour chaque client :
+### Checklist avant production
 
-- **Template propre** : Aucun code spécifique hardcodé
-- **Submodules dynamiques** : Ajout facile des projets clients
-- **Configuration par environnement** : Tout dans `.env`
-- **Scripts automatisés** : Déploiement simplifié
+- [ ] Changer TOUS les mots de passe dans `.env`
+- [ ] Configurer les DNS pour questpulse.store et n8n.questpulse.store
+- [ ] Installer Certbot et générer les certificats SSL
+- [ ] Configurer les backups MongoDB automatiques
+- [ ] Mettre en place un monitoring (Prometheus/Grafana)
+- [ ] Configurer un firewall (ufw)
+- [ ] Activer les logs rotatifs
+
+### Backup MongoDB
+
+```bash
+# Backup manuel
+docker exec goalcraft-mongodb mongodump \
+  --out /backup \
+  --uri="mongodb://admin:${MONGO_PASSWORD}@localhost:27017"
+
+# Avec le script
+./scripts/backup-docker-volumes.sh goalcraft_mongodb_data
+```
 
 ## 📚 Documentation
 
-- **[CLAUDE.md](CLAUDE.md)** : Guide complet pour Claude AI et développement
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** : Guide de contribution
-- **[LICENSE](LICENSE)** : Licence MIT
+- **[CLAUDE.md](CLAUDE.md)** : Guide complet pour le développement
+- **[services/goalcraft/](services/goalcraft/)** : Code source GoalCraftAI
+- **[.env.example](.env.example)** : Template des variables d'environnement
 
-## 🤝 Contribution
+## 🔐 Sécurité
 
-Les contributions sont les bienvenues ! Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour les guidelines.
+- **SSL/TLS** : Certificats Let's Encrypt auto-renouvelés
+- **Auth n8n** : Basic Auth configuré
+- **NextAuth** : JWT sécurisé pour GoalCraft
+- **MongoDB** : Authentification activée
+- **Réseau** : Communication inter-services via réseau Docker interne
+- **Ports** : Seuls 80/443 exposés publiquement
+
+## 📊 Monitoring
+
+```bash
+# Health checks
+curl https://questpulse.store/api/health
+curl https://n8n.questpulse.store/healthz
+
+# Logs en temps réel
+docker compose logs -f --tail=100
+
+# Métriques Docker
+docker stats
+```
+
+## 🤝 Support
+
+Pour toute question :
+- Créer une issue sur GitHub
+- Repository : https://github.com/loisperrigon/infrastructure-goalcraft
 
 ## 📄 Licence
 
-Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
-## 🌟 Remerciements
-
-- Conçu pour être modulaire et réutilisable
-- Basé sur les meilleures pratiques DevOps
-- Optimisé pour une mise en production rapide
+Propriétaire - Lois Perrigon
 
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/La-Refonte">La Refonte</a><br>
-  <strong>Infrastructure Template</strong> - Votre base solide pour des déploiements professionnels 🚀
+  <strong>Infrastructure GoalCraftAI</strong><br>
+  Next.js + WebSocket + n8n + MongoDB 🚀
 </p>
