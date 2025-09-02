@@ -1,0 +1,40 @@
+# ===========================================
+# Dockerfile pour Next.js (Development)
+# Hot reload activé
+# ===========================================
+
+FROM node:20-alpine
+
+# Install dependencies for better compatibility
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install all dependencies (including devDependencies)
+RUN npm ci && \
+    npm cache clean --force
+
+# Copy application code
+COPY . .
+
+# Generate Prisma client if using Prisma
+RUN if [ -f "prisma/schema.prisma" ]; then npx prisma generate; fi
+
+# Set development environment
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Enable polling for file changes (for Docker on Windows/Mac)
+ENV WATCHPACK_POLLING=true
+ENV CHOKIDAR_USEPOLLING=true
+
+# Expose port
+EXPOSE 3000
+
+# Start development server
+CMD ["npm", "run", "dev"]

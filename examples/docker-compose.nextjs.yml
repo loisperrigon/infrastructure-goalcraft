@@ -1,0 +1,71 @@
+# ===========================================
+# Configuration Docker Compose pour Next.js
+# ===========================================
+# Ajoutez ce service dans votre docker-compose.yml principal
+
+version: '3.8'
+
+services:
+  # ========================================
+  # Next.js Application (Production)
+  # ========================================
+  nextjs-app:
+    build:
+      context: ./services/client-nextjs/
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+    restart: always
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NODE_ENV: production
+      # Public variables (available in browser)
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.yourdomain.com}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://yourdomain.com}
+      # Server-side only variables
+      DATABASE_URL: ${DATABASE_URL}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-https://yourdomain.com}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      # Optional: Analytics, monitoring
+      NEXT_PUBLIC_GA_ID: ${GA_ID}
+      NEXT_PUBLIC_SENTRY_DSN: ${SENTRY_DSN}
+    env_file:
+      - .env
+    volumes:
+      - nextjs_cache:/app/.next/cache
+      - public_uploads:/app/public/uploads
+    depends_on:
+      - database
+      - redis
+
+  # ========================================
+  # Next.js Development Server (optional)
+  # ========================================
+  nextjs-dev:
+    build:
+      context: ./services/client-nextjs/
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./services/client-nextjs:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      # Hot reload
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    command: npm run dev
+
+# ========================================
+# Volumes
+# ========================================
+volumes:
+  nextjs_cache:
+    driver: local
+  public_uploads:
+    driver: local

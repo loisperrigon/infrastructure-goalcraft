@@ -1,0 +1,138 @@
+# ===========================================
+# Next.js Application Nginx Configuration
+# Replace:
+# - SERVICE_NAME with actual service name (e.g., goalcraft)
+# - CLIENT_DOMAIN with actual domain (e.g., goalcraft.ai)
+# ===========================================
+
+# HTTP to HTTPS redirect
+server {
+    listen 80;
+    server_name SERVICE_NAME.CLIENT_DOMAIN;
+    return 301 https://$host$request_uri;
+}
+
+# Next.js Application
+server {
+    listen 443 ssl http2;
+    server_name SERVICE_NAME.CLIENT_DOMAIN;
+
+    # Limits
+    client_max_body_size 100M;
+    client_body_timeout 60s;
+    client_header_timeout 60s;
+
+    # SSL configuration
+    include /etc/nginx/options-ssl-nginx.conf;
+
+    # Logs
+    access_log /var/log/nginx/SERVICE_NAME.access.log;
+    error_log /var/log/nginx/SERVICE_NAME.error.log;
+
+    # Rate limiting
+    limit_req zone=general burst=30 nodelay;
+    limit_conn conn_limit_per_ip 15;
+
+    # Security headers
+    add_header X-Frame-Options SAMEORIGIN always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    
+    # Next.js specific CSP (adjust as needed)
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:;" always;
+
+    # Proxy to Next.js application
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # Next.js API routes
+    location /api {
+        limit_req zone=api burst=20 nodelay;
+        
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        
+        # Longer timeout for API routes
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 300s;
+    }
+
+    # Static files (_next/static)
+    location /_next/static {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_cache_bypass $http_upgrade;
+        
+        # Long cache for immutable assets
+        expires 365d;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }
+
+    # Next.js Image Optimization API
+    location /_next/image {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        
+        # Cache optimized images
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+    }
+
+    # Public static files
+    location /public {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_cache_bypass $http_upgrade;
+        
+        # Cache public assets
+        expires 7d;
+        add_header Cache-Control "public, max-age=604800";
+        access_log off;
+    }
+
+    # WebSocket support (for Next.js hot reload in dev)
+    location /_next/webpack-hmr {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Health check endpoint
+    location /health {
+        proxy_pass http://127.0.0.1:3000/api/health;
+        access_log off;
+    }
+}
