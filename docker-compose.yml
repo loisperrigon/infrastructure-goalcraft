@@ -54,9 +54,10 @@ services:
     container_name: goalcraft-app
     ports:
       - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3002:3002"  # WebSocket server
     environment:
       - NODE_ENV=production
-      - MONGODB_URI=mongodb://admin:${MONGO_PASSWORD:-goalcraft2024}@goalcraft-mongodb:27017/goalcraft?authSource=admin
+      - MONGODB_URI=mongodb://admin:${MONGO_PASSWORD}@goalcraft-mongodb:27017/goalcraft?authSource=admin
       - NEXTAUTH_URL=${NEXTAUTH_URL:-https://questpulse.store}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
@@ -81,7 +82,7 @@ services:
       - "127.0.0.1:27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-goalcraft2024}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
       - MONGO_INITDB_DATABASE=goalcraft
     volumes:
       - goalcraft_mongodb_data:/data/db

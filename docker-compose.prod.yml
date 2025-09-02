@@ -1,0 +1,13 @@
+# ===========================================
+# Docker Compose - Configuration Production
+# ===========================================
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Cette configuration surcharge docker-compose.yml pour la production
+
+version: '3.8'
+
+services:
+  # MongoDB sans exposition externe en production
+  goalcraft-mongodb:
+    ports: []  # Pas de ports exposés en production
+    # MongoDB accessible uniquement via le réseau Docker interne
