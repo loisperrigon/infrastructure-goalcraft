@@ -21,7 +21,8 @@
       "Bash(git commit:*)",
       "Bash(gh repo create:*)",
       "Bash(git clone:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "WebSearch"
     ],
     "deny": []
   }
